@@ -1,30 +1,24 @@
 [app]
+title = Mapa do Marianoto
+package.name = marianoto
+package.domain = com.marianoto
 
-title = Mapa Marianoto
-package.name = mapa_marianoto
-package.domain = org.gg2210
-
-# Inclui todos os arquivos importantes diretamente
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
-source.exclude_exts = spec
+source.main = main.py
 
-requirements = python3,kivy
+# ✅ LISTA EXPLÍCITA DE TODAS AS IMAGENS
+source.include_exts = py,png,jpg,jpeg
+source.include_patterns = 
+    mari.png,
+    mari_walk.png,
+    mari_up.png, 
+    mari_down.png,
+    mari_attack.png,
+    chest.png
 
-orientation = portrait
 version = 1.0
+requirements = python3, pygame
+
+orientation = landscape
+android.api = 29
 android.minapi = 21
-android.api = 34
-android.build_tools = 34.0.0
-
-p4a.branch = v2024.01.21
-
-icon.filename = %(source.dir)s/icon.png
-android.permissions = INTERNET,ACCESS_NETWORK_STATE,WRITE_EXTERNAL_STORAGE
-log_level = 2
-
-# Não há pasta de assets, sprites soltos já estão incluídos
-android.add_assets = 
-
-# Força modo debug
-android.debug = 1
