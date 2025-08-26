@@ -19,6 +19,7 @@ jobs:
         
     - name: Install Buildozer and dependencies
       run: |
+        pip install --upgrade pip
         pip install buildozer cython==0.29.33 virtualenv
       
     - name: Install Android SDK Command Line Tools
@@ -29,11 +30,15 @@ jobs:
         mkdir -p android-sdk/cmdline-tools
         unzip cmdline-tools.zip -d android-sdk/cmdline-tools
         rm cmdline-tools.zip
-        mv android-sdk/cmdline-tools/cmdline-tools android-sdk/cmdline-tools/latest
+        # corrigindo estrutura para sdkmanager funcionar
+        mkdir -p android-sdk/cmdline-tools/latest
+        mv android-sdk/cmdline-tools/cmdline-tools/* android-sdk/cmdline-tools/latest/
+        # instalar pacotes necessários
         yes | android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
           "platform-tools" \
           "platforms;android-34" \
           "build-tools;34.0.0"
+        # aceitar todas as licenças
         yes | android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses
 
     - name: Set environment variables
@@ -88,8 +93,8 @@ jobs:
 
     - name: Generate QR Code for APK download
       run: |
-        # URL de download direto do artefato
-        APK_URL="https://nightly.link/${{ github.repository }}/actions/artifacts/$(date +%s)/mapa-marianoto-apk.zip"
+        # link para download via nightly.link (artefato do GitHub Actions)
+        APK_URL="https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/mapa-marianoto-apk.zip"
         echo "Link gerado: $APK_URL"
         qrencode -o qrcode.png "$APK_URL"
 
