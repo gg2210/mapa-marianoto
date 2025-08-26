@@ -17,21 +17,23 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y python3-pip python3-dev openjdk-8-jdk zlib1g-dev ccache
         
-    - name: Install Buildozer
+    - name: Install Buildozer and dependencies
       run: |
         pip install buildozer cython==0.29.33
         
-    - name: Setup Android SDK (Método Simplificado)
+    - name: Initialize Buildozer environment
       run: |
-        # Configurar variáveis do Android SDK que o Buildozer precisa
-        mkdir -p ~/.buildozer/android/platform/android-sdk
-        echo "export ANDROID_SDK_ROOT=~/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
-        echo "sdk.dir=$HOME/.buildozer/android/platform/android-sdk" > local.properties
+        # Forçar download completo do python-for-android
+        buildozer init
+        buildozer android clean
+        # Download manual do python-for-android
+        git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
+        cd .buildozer/android/platform/python-for-android
+        git checkout stable
+        cd ../../../../
         
     - name: Build APK with Buildozer
       run: |
-        # Forçar o Buildozer a baixar o Android SDK automaticamente
-        buildozer android clean
         buildozer android update
         buildozer android debug
         
