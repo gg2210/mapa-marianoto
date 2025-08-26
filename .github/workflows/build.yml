@@ -1,105 +1,108 @@
 name: Build APK
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
-    
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
-    
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y python3-pip python3-dev openjdk-17-jdk zlib1g-dev ccache libffi-dev libssl-dev autoconf automake libtool unzip wget git qrencode
-        
+        sudo apt-get install -y python3-pip python3-dev openjdk-17-jdk \
+        zlib1g-dev ccache libffi-dev libssl-dev autoconf automake libtool unzip wget git qrencode
+
     - name: Install Buildozer and dependencies
       run: |
         pip install --upgrade pip
         pip install buildozer cython==0.29.33 virtualenv
-      
+
     - name: Install Android SDK Command Line Tools
       run: |
-        mkdir -p $HOME/.buildozer/android/platform
-        cd $HOME/.buildozer/android/platform
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-        mkdir -p android-sdk/cmdline-tools
-        unzip cmdline-tools.zip -d android-sdk/cmdline-tools
-        rm cmdline-tools.zip
-        # corrigindo estrutura para sdkmanager funcionar
-        mkdir -p android-sdk/cmdline-tools/latest
-        mv android-sdk/cmdline-tools/cmdline-tools/* android-sdk/cmdline-tools/latest/
-        # instalar pacotes necessários
-        yes | android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
-          "platform-tools" \
-          "platforms;android-34" \
-          "build-tools;34.0.0"
-        # aceitar todas as licenças
-        yes | android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk --licenses
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+        cd $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
+        unzip tools.zip
+        rm tools.zip
+        mkdir -p latest
+        mv cmdline-tools/* latest/
+        
+        # Criar link simbólico para Buildozer (caminho antigo)
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
+        ln -sf $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+               $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
 
     - name: Set environment variables
       run: |
         echo "ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$HOME/.buildozer/android/platform/android-sdk/platform-tools:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin:$HOME/.buildozer/android/platform/android-sdk/build-tools/34.0.0:$PATH" >> $GITHUB_ENV
-        
-    - name: Setup Android environment
+        echo "PATH=$HOME/.buildozer/android/platform/android-sdk/platform-tools:$HOME/.buildozer/android/platform/android-sdk/build-tools/34.0.0:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
+
+    - name: Accept Android Licenses and install packages
       run: |
-        mkdir -p ~/.buildozer/android/platform
-        echo "sdk.dir=$HOME/.buildozer/android/platform/android-sdk" > local.properties
-        echo "ndk.dir=$HOME/.buildozer/android/platform/android-ndk" >> local.properties
-        
-    - name: Manual python-for-android setup
+        yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+          "platform-tools" \
+          "platforms;android-34" \
+          "build-tools;34.0.0"
+
+    - name: Setup python-for-android
       run: |
         rm -rf .buildozer/android/platform/python-for-android
         git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
         cd .buildozer/android/platform/python-for-android
         git checkout v2024.01.21
         cd ../../../../
-        
-    - name: Build APK with verbose logging
+
+    - name: Build APK
       run: |
         buildozer android clean 2>&1 | tee build.log
         buildozer android update 2>&1 | tee -a build.log
         buildozer android debug 2>&1 | tee -a build.log
-        
-    - name: Check if APK was created
+
+    - name: Check APK
       run: |
         if ls bin/*.apk 1> /dev/null 2>&1; then
           echo "✅ APK criado com sucesso!"
           ls -la bin/
         else
           echo "❌ Falha na criação do APK"
-          cat build.log | tail -50
+          tail -50 build.log
           exit 1
         fi
-        
-    - name: Upload APK
+
+    - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
         name: mapa-marianoto-apk
         path: bin/*.apk
         if-no-files-found: error
-        
+
+    - name: Generate QR Code for APK download
+      run: |
+        APK_URL="https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/mapa-marianoto-apk.zip"
+        echo "Link gerado: $APK_URL"
+        qrencode -o qrcode.png "$APK_URL"
+
+    - name: Upload QR Code artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: apk-qrcode
+        path: qrcode.png
+
     - name: Upload build log
       uses: actions/upload-artifact@v4
       with:
         name: build-log
         path: build.log
-
-    - name: Generate QR Code for APK download
-      run: |
-        # link para download via nightly.link (artefato do GitHub Actions)
-        APK_URL="https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/mapa-marianoto-apk.zip"
-        echo "Link gerado: $APK_URL"
-        qrencode -o qrcode.png "$APK_URL"
-
-    - name: Upload QR Code
-      uses: actions/upload-artifact@v4
-      with:
-        name: apk-qrcode
-        path: qrcode.png
