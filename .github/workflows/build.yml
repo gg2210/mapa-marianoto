@@ -8,7 +8,7 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/ssetup-python@v4
       with:
         python-version: '3.9'
     
@@ -23,27 +23,23 @@ jobs:
         
     - name: Install Android SDK manually
       run: |
-        # Download e instalação MANUAL do Android SDK (CORRIGIDO)
+        # Método SIMPLES e FUNCIONAL
         wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-        unzip commandlinetools-linux-9477386_latest.zip -d android-sdk-cmdline
-        mkdir -p android-sdk
-        mv android-sdk-cmdline/cmdline-tools android-sdk/
+        unzip commandlinetools-linux-9477386_latest.zip
         mkdir -p android-sdk/cmdline-tools/latest
-        mv android-sdk/cmdline-tools/* android-sdk/cmdline-tools/latest/
+        mv cmdline-tools/* android-sdk/cmdline-tools/latest/
+        rm -rf cmdline-tools
         
-        # Configurar variáveis de ambiente
         echo "ANDROID_HOME=$GITHUB_WORKSPACE/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$GITHUB_WORKSPACE/android-sdk/cmdline-tools/latest/bin:$GITHUB_WORKSPACE/android-sdk/platform-tools:$PATH" >> $GITHUB_ENV
+        echo "PATH=$GITHUB_WORKSPACE/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
         
     - name: Install Android packages
       run: |
-        # Aceitar licenças e instalar pacotes necessários
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34" "cmdline-tools;latest"
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34"
         
     - name: Build with Buildozer
       run: |
-        # Configurar Buildozer para usar o SDK manual
         echo "android.sdk_path = $ANDROID_HOME" >> buildozer.spec
         buildozer android clean
         buildozer android update
