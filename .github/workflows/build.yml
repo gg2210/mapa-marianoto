@@ -17,29 +17,18 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y python3-pip python3-dev openjdk-8-jdk zlib1g-dev ccache unzip
         
-    - name: Install Buildozer
+    - name: Install Buildozer and missing dependencies
       run: |
         pip install buildozer cython==0.29.33
+        # DEPENDÊNCIAS QUE O BUILDozer ESQUECE:
+        pip install appdirs sh jinja2
         
     - name: Install Android SDK and AIDL
       run: |
-        # Instalar Android SDK com os nomes EXATOS
         sudo apt-get install -y google-android-platform-34-installer google-android-build-tools-34.0.0-installer
-        
-        # Configurar variáveis de ambiente
         echo "ANDROID_HOME=/usr/lib/android-sdk" >> $GITHUB_ENV
         echo "PATH=/usr/lib/android-sdk/platform-tools:/usr/lib/android-sdk/build-tools/34.0.0:$PATH" >> $GITHUB_ENV
         echo "sdk.dir=/usr/lib/android-sdk" > local.properties
-        
-    - name: Download python-for-android manually
-      run: |
-        # Download MANUAL do python-for-android
-        rm -rf .buildozer
-        mkdir -p .buildozer/android/platform
-        git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
-        cd .buildozer/android/platform/python-for-android
-        git checkout master  # Usar branch master que sempre existe
-        cd ../../../../
         
     - name: Build with Buildozer
       run: |
@@ -53,4 +42,3 @@ jobs:
         name: mapa-marianoto-apk
         path: bin/*.apk
         if-no-files-found: error
-        
