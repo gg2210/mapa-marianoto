@@ -12,29 +12,27 @@ jobs:
       with:
         python-version: '3.9'
     
-    - name: Install Android SDK and dependencies
+    - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y python3-pip python3-dev openjdk-8-jdk zlib1g-dev ccache
-        # Instalar Android Command Line Tools
-        wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
-        unzip commandlinetools-linux-8512546_latest.zip -d cmdline-tools
-        mv cmdline-tools/cmdline-tools cmdline-tools/latest
-        echo "export ANDROID_HOME=$PWD" >> $GITHUB_ENV
-        echo "export PATH=$PWD/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
         
-    - name: Install Android SDK components
-      run: |
-        yes | sdkmanager --licenses
-        sdkmanager "platform-tools" "build-tools;30.0.3" "platforms;android-30"
-        echo "export PATH=$PWD/platform-tools:$PATH" >> $GITHUB_ENV
-        
-    - name: Install Buildozer and dependencies
+    - name: Install Buildozer
       run: |
         pip install buildozer cython==0.29.33
         
+    - name: Setup Android SDK (Método Simplificado)
+      run: |
+        # Configurar variáveis do Android SDK que o Buildozer precisa
+        mkdir -p ~/.buildozer/android/platform/android-sdk
+        echo "export ANDROID_SDK_ROOT=~/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
+        echo "sdk.dir=$HOME/.buildozer/android/platform/android-sdk" > local.properties
+        
     - name: Build APK with Buildozer
       run: |
+        # Forçar o Buildozer a baixar o Android SDK automaticamente
+        buildozer android clean
+        buildozer android update
         buildozer android debug
         
     - name: Upload APK
