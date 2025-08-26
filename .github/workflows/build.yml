@@ -34,7 +34,7 @@ jobs:
         rm -rf .buildozer/android/platform/python-for-android
         git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
         cd .buildozer/android/platform/python-for-android
-        git checkout 2024.1.21 # Versão estável específica
+        git checkout master # Versão estável específica
         cd ../../../../
         
     - name: Build APK with verbose logging
