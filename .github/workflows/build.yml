@@ -65,11 +65,18 @@ jobs:
         git checkout v2024.01.21
         cd ../../../../
 
+    - name: Fix permissions (avoid aidl / zipalign errors)
+      run: |
+        chmod +x $HOME/.buildozer/android/platform/android-sdk/build-tools/34.0.0/aidl
+        chmod +x $HOME/.buildozer/android/platform/android-sdk/build-tools/34.0.0/zipalign
+
+    - name: Clean old builds
+      run: |
+        buildozer android clean
+
     - name: Build APK
       run: |
-        buildozer android clean 2>&1 | tee build.log
-        buildozer android update 2>&1 | tee -a build.log
-        buildozer android debug 2>&1 | tee -a build.log
+        buildozer android debug | tee build.log
 
     - name: Check APK
       run: |
@@ -92,7 +99,6 @@ jobs:
     - name: Generate QR Code
       run: |
         APK_URL="https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/mapa-marianoto-apk.zip"
-        echo "QR Code link: $APK_URL"
         qrencode -o qrcode.png "$APK_URL"
 
     - name: Upload QR Code
