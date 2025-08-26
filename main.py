@@ -139,12 +139,23 @@ gift_hints = [
 # PLAYER / SPRITES
 def load_img(path, fallback_color, size=(42, 42)):
     try:
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"Arquivo não encontrado: {path}")
-        img = pygame.image.load(path).convert_alpha()
+        # No Android, as imagens estarão no diretório raiz
+        from os.path import exists, join
+        from android.storage import app_storage_path
+        
+        # Tenta carregar do diretório do app Android
+        android_path = join(app_storage_path(), path)
+        if exists(android_path):
+            img = pygame.image.load(android_path).convert_alpha()
+        elif exists(path):  # Para desenvolvimento
+            img = pygame.image.load(path).convert_alpha()
+        else:
+            raise FileNotFoundError(f"Imagem não encontrada: {path}")
+            
         return pygame.transform.scale(img, size)
     except Exception as e:
-        print(f"Erro ao carregar imagem {path}: {e}")
+        print(f"Erro ao carregar {path}: {e}")
+        # Fallback
         s = pygame.Surface(size, pygame.SRCALPHA)
         s.fill(fallback_color)
         pygame.draw.rect(s, BLACK, s.get_rect(), 2)
