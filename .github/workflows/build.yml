@@ -8,20 +8,32 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v4
       with:
         python-version: '3.9'
     
-    - name: Install system dependencies
+    - name: Install Android SDK and dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y python3-pip python3-dev openjdk-8-jdk zlib1g-dev ccache
+        # Instalar Android Command Line Tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+        unzip commandlinetools-linux-8512546_latest.zip -d cmdline-tools
+        mv cmdline-tools/cmdline-tools cmdline-tools/latest
+        echo "export ANDROID_HOME=$PWD" >> $GITHUB_ENV
+        echo "export PATH=$PWD/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
         
-    - name: Install Buildozer
+    - name: Install Android SDK components
+      run: |
+        yes | sdkmanager --licenses
+        sdkmanager "platform-tools" "build-tools;30.0.3" "platforms;android-30"
+        echo "export PATH=$PWD/platform-tools:$PATH" >> $GITHUB_ENV
+        
+    - name: Install Buildozer and dependencies
       run: |
         pip install buildozer cython==0.29.33
         
-    - name: Build APK
+    - name: Build APK with Buildozer
       run: |
         buildozer android debug
         
