@@ -23,8 +23,8 @@ jobs:
         
     - name: Install Android SDK and AIDL
       run: |
-        # Instalar Android SDK completo incluindo AIDL
-        sudo apt-get install -y android-sdk android-sdk-platform-34 android-sdk-build-tools-34.0.0
+        # Instalar Android SDK com os NOVOS nomes de pacotes
+        sudo apt-get install -y google-android-platform-34-installer google-android-build-tools-34-installer
         
         # Configurar variáveis de ambiente
         echo "ANDROID_HOME=/usr/lib/android-sdk" >> $GITHUB_ENV
