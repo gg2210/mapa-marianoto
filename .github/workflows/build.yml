@@ -15,45 +15,33 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y python3-pip python3-dev openjdk-8-jdk zlib1g-dev ccache libffi-dev libssl-dev autoconf automake libtool
+        sudo apt-get install -y python3-pip python3-dev openjdk-8-jdk zlib1g-dev ccache
         
     - name: Install Buildozer and dependencies
       run: |
-        pip install buildozer cython==0.29.33 virtualenv
+        pip install buildozer cython==0.29.33
         
-    - name: Setup Android environment
+    - name: Discover valid python-for-android tags
       run: |
-        # Configurar ambiente Android que o Buildozer espera
-        mkdir -p ~/.buildozer/android/platform
-        echo "sdk.dir=$HOME/.buildozer/android/platform/android-sdk" > local.properties
-        echo "ndk.dir=$HOME/.buildozer/android/platform/android-ndk" >> local.properties
-        
-    - name: Manual python-for-android setup
-      run: |
-        # Download MANUAL do python-for-android (SEM buildozer init)
+        # Clonar e descobrir tags disponíveis
         rm -rf .buildozer/android/platform/python-for-android
         git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
         cd .buildozer/android/platform/python-for-android
-        git checkout 2024.03.25 # Versão estável específica
+        
+        # Listar todas tags disponíveis
+        echo "📋 TAGS DISPONÍVEIS:"
+        git tag -l | head -20
+        
+        # Usar a branch master (SEMPRE existe)
+        git checkout master
+        echo "✅ Usando branch master"
+        
         cd ../../../../
         
-    - name: Build APK with verbose logging
+    - name: Build APK with Buildozer
       run: |
-        # Build com logging detalhado
-        buildozer android clean 2>&1 | tee build.log
-        buildozer android update 2>&1 | tee -a build.log
-        buildozer android debug 2>&1 | tee -a build.log
-        
-    - name: Check if APK was created
-      run: |
-        if [ -f bin/*.apk ]; then
-          echo "✅ APK criado com sucesso!"
-          ls -la bin/
-        else
-          echo "❌ Falha na criação do APK"
-          cat build.log | tail -50
-          exit 1
-        fi
+        buildozer android update
+        buildozer android debug
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
@@ -61,9 +49,3 @@ jobs:
         name: mapa-marianoto-apk
         path: bin/*.apk
         if-no-files-found: error
-        
-    - name: Upload build log
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-log
-        path: build.log
