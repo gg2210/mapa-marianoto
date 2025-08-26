@@ -5,9 +5,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Build APK
-      uses: ArturMoskvyak/buildozer-action@v1
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        workdir: .
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip python3-dev openjdk-8-jdk zlib1g-dev
+        pip install buildozer
+    
+    - name: Build APK with Buildozer
+      run: |
+        buildozer android debug
         
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-apk
+        path: bin/*.apk
