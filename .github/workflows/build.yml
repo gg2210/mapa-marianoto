@@ -1,4 +1,5 @@
 name: Build APK
+
 on:
   push:
     branches:
@@ -9,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
+    - name: Checkout repository
       uses: actions/checkout@v4
 
     - name: Set up Python
@@ -23,7 +24,7 @@ jobs:
         sudo apt-get install -y python3-pip python3-dev openjdk-17-jdk \
         zlib1g-dev ccache libffi-dev libssl-dev autoconf automake libtool unzip wget git qrencode
 
-    - name: Install Buildozer and dependencies
+    - name: Install Buildozer and Cython
       run: |
         pip install --upgrade pip
         pip install buildozer cython==0.29.33 virtualenv
@@ -37,8 +38,7 @@ jobs:
         rm tools.zip
         mkdir -p latest
         mv cmdline-tools/* latest/
-        
-        # Criar link simbólico para Buildozer (caminho antigo)
+        # link simbólico para compatibilidade Buildozer
         mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools/bin
         ln -sf $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
                $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
@@ -49,7 +49,7 @@ jobs:
         echo "ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
         echo "PATH=$HOME/.buildozer/android/platform/android-sdk/platform-tools:$HOME/.buildozer/android/platform/android-sdk/build-tools/34.0.0:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
 
-    - name: Accept Android Licenses and install packages
+    - name: Accept Android Licenses
       run: |
         yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
@@ -89,13 +89,13 @@ jobs:
         path: bin/*.apk
         if-no-files-found: error
 
-    - name: Generate QR Code for APK download
+    - name: Generate QR Code
       run: |
         APK_URL="https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/mapa-marianoto-apk.zip"
-        echo "Link gerado: $APK_URL"
+        echo "QR Code link: $APK_URL"
         qrencode -o qrcode.png "$APK_URL"
 
-    - name: Upload QR Code artifact
+    - name: Upload QR Code
       uses: actions/upload-artifact@v4
       with:
         name: apk-qrcode
