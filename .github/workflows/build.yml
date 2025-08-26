@@ -8,7 +8,7 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/ssetup-python@v4
+      uses: actions/setup-python@v4
       with:
         python-version: '3.9'
     
@@ -21,26 +21,18 @@ jobs:
       run: |
         pip install buildozer cython==0.29.33
         
-    - name: Install Android SDK manually
+    - name: Install Android SDK and AIDL
       run: |
-        # Método SIMPLES e FUNCIONAL
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-        unzip commandlinetools-linux-9477386_latest.zip
-        mkdir -p android-sdk/cmdline-tools/latest
-        mv cmdline-tools/* android-sdk/cmdline-tools/latest/
-        rm -rf cmdline-tools
+        # Instalar Android SDK completo incluindo AIDL
+        sudo apt-get install -y android-sdk android-sdk-platform-34 android-sdk-build-tools-34.0.0
         
-        echo "ANDROID_HOME=$GITHUB_WORKSPACE/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$GITHUB_WORKSPACE/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
-        
-    - name: Install Android packages
-      run: |
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+        # Configurar variáveis de ambiente
+        echo "ANDROID_HOME=/usr/lib/android-sdk" >> $GITHUB_ENV
+        echo "PATH=/usr/lib/android-sdk/platform-tools:/usr/lib/android-sdk/build-tools/34.0.0:$PATH" >> $GITHUB_ENV
+        echo "sdk.dir=/usr/lib/android-sdk" > local.properties
         
     - name: Build with Buildozer
       run: |
-        echo "android.sdk_path = $ANDROID_HOME" >> buildozer.spec
         buildozer android clean
         buildozer android update
         buildozer android debug
