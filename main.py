@@ -4,6 +4,7 @@ import math
 import random
 import os
 
+
 # Configurações principais
 VIRTUAL_WIDTH, VIRTUAL_HEIGHT = 960, 540  # Resolução virtual (fixa)
 
