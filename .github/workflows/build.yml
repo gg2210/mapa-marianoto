@@ -31,6 +31,16 @@ jobs:
         echo "PATH=/usr/lib/android-sdk/platform-tools:/usr/lib/android-sdk/build-tools/34.0.0:$PATH" >> $GITHUB_ENV
         echo "sdk.dir=/usr/lib/android-sdk" > local.properties
         
+    - name: Download python-for-android manually
+      run: |
+        # Download MANUAL do python-for-android
+        rm -rf .buildozer
+        mkdir -p .buildozer/android/platform
+        git clone https://github.com/kivy/python-for-android.git .buildozer/android/platform/python-for-android
+        cd .buildozer/android/platform/python-for-android
+        git checkout master  # Usar branch master que sempre existe
+        cd ../../../../
+        
     - name: Build with Buildozer
       run: |
         buildozer android clean
@@ -43,3 +53,4 @@ jobs:
         name: mapa-marianoto-apk
         path: bin/*.apk
         if-no-files-found: error
+        
